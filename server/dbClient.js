@@ -7,55 +7,58 @@ const sqlite3 = require("sqlite3").verbose();
 const TABLE_NAME = "timeSeriesData";
 const CREATE_TABLE_SQL = "CREATE TABLE " + TABLE_NAME + " (AsOf INTEGER, Value TEXT)";
 
+// key is index code, value is knex conn
+var knexConnections = {};
+
 function getDataFileName(nasdaqIndexCode) {
     // TODO: file should be moved to outside of project folder
     return path.join(__dirname, 'data', nasdaqIndexCode + '.db');
 }
 
-module.exports = function (nasdaqIndexCode) {
-    return {
-        init: function () {
-            const dataFile = getDataFileName(nasdaqIndexCode);
-            var exists = fs.existsSync(dataFile);
+module.exports = {
 
-            if (!exists) {
-                console.log("Creating DB file : " + dataFile);
-                fs.openSync(dataFile, "w");
+    init: function (nasdaqIndexCode) {
+        const dataFile = getDataFileName(nasdaqIndexCode);
+        var exists = fs.existsSync(dataFile);
 
-                var db = new sqlite3.Database(dataFile);
-                db.serialize(function () {
-                    db.run(CREATE_TABLE_SQL);
-                });
-
-                db.close();
-            }
-        },
-        insert: function (asOf, value) {
-            const dataFile = getDataFileName(nasdaqIndexCode);
+        if (!exists) {
+            console.log("Creating DB file : " + dataFile);
+            fs.openSync(dataFile, "w");
             var db = new sqlite3.Database(dataFile);
-
             db.serialize(function () {
-                var stmt = db.prepare("INSERT INTO " + TABLE_NAME + " VALUES (?, ?)");
-                stmt.run(asOf, value);
-                stmt.finalize();
-                db.each("SELECT AsOf, Value FROM " + TABLE_NAME, function (err, row) {
-                    console.log(row.AsOf + ": " + row.Value);
-                });
-            });
-
-            db.close();
-        },
-        select: function () {
-            const dataFile = getDataFileName(nasdaqIndexCode);
-            var db = new sqlite3.Database(dataFile);
-
-            db.serialize(function () {
-                db.each("SELECT AsOf, Value FROM " + TABLE_NAME, function (err, row) {
-                    console.log(row.AsOf + ": " + row.Value);
-                });
+                db.run(CREATE_TABLE_SQL);
             });
 
             db.close();
         }
-    };
+    },
+
+    insert: function (nasdaqIndexCode, asOf, value) {
+        return this.createOrGetKnexConnection(nasdaqIndexCode)
+            .insert({ AsOf: asOf, Value: value })
+            .into(TABLE_NAME)
+            .catch(function (error) {
+                console.error(error);
+            });;
+    },
+
+    select: function (nasdaqIndexCode) {
+        return this.createOrGetKnexConnection(nasdaqIndexCode)
+            .distinct('AsOf')
+            .select('AsOf', 'Value')
+            .from(TABLE_NAME)
+            .orderBy('AsOf', 'asc');
+    },
+
+    createOrGetKnexConnection: function (nasdaqIndexCode) {
+        if (!knexConnections[nasdaqIndexCode]) {
+            knexConnections[nasdaqIndexCode] = require('knex')({
+                client: 'sqlite3',
+                connection: {
+                    filename: getDataFileName(nasdaqIndexCode)
+                }
+            });
+        }
+        return knexConnections[nasdaqIndexCode];
+    }
 };

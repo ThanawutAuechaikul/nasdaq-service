@@ -1,8 +1,7 @@
 'use strict';
 
 const nasdaqRequest = require('request');
-const INTERVAL_SECONDS = 2 * 1000;
-const REQUEST_TIMEOUT_SECONDS = 5 * 1000;
+const REQUEST_TIMEOUT_MS = 5 * 1000;
 
 var _nasdaqIndexCode = "";
 var _getIndexDataCallback = null;
@@ -11,7 +10,7 @@ function requestData() {
     nasdaqRequest.post({
         url: 'http://www.nasdaq.com/aspx/IndexData.ashx',
         json: true,
-        timeout: REQUEST_TIMEOUT_SECONDS,
+        timeout: REQUEST_TIMEOUT_MS,
         form: { index: _nasdaqIndexCode }
     }, requestCallback);
 }
@@ -19,7 +18,7 @@ function requestData() {
 function requestCallback(error, response, body) {
     if (!error) {
         if (_getIndexDataCallback && body.Value && body.AsOf) {
-            _getIndexDataCallback(body.AsOf, body.Value);
+            _getIndexDataCallback(_nasdaqIndexCode, body.AsOf, body.Value);
         }
     } else {
         console.error("request nasdaq data error: " + error);
@@ -27,10 +26,10 @@ function requestCallback(error, response, body) {
 }
 
 module.exports = {
-    start: function (nasdaqIndexCode, getIndexDataCallback) {
+    start: function (nasdaqIndexCode, interval, getIndexDataCallback) {
         _nasdaqIndexCode = nasdaqIndexCode;
         _getIndexDataCallback = getIndexDataCallback;
 
-        setInterval(requestData, INTERVAL_SECONDS);
+        setInterval(requestData, interval);
     }
 }

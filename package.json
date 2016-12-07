@@ -9,6 +9,7 @@
   },
   "author": "Thanawut Auechaikul",
   "dependencies": {
+    "express": "4.14.0",
     "knex": "0.12.6",
     "request": "2.79.0",
     "sqlite3": "3.1.8"
