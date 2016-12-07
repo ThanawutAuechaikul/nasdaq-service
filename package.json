@@ -1,0 +1,16 @@
+{
+  "name": "nasdaq-service",
+  "version": "0.0.1",
+  "description": "service providing NASDAQ index value",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Thanawut Auechaikul",
+  "dependencies": {
+    "knex": "0.12.6",
+    "request": "2.79.0",
+    "sqlite3": "3.1.8"
+  }
+}
