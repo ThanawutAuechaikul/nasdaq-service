@@ -1,3 +1,5 @@
+'use strict';
+
 const fs = require("fs");
 const path = require('path');
 const sqlite3 = require("sqlite3").verbose();
@@ -36,6 +38,18 @@ module.exports = function (nasdaqIndexCode) {
                 var stmt = db.prepare("INSERT INTO " + TABLE_NAME + " VALUES (?, ?)");
                 stmt.run(asOf, value);
                 stmt.finalize();
+                db.each("SELECT AsOf, Value FROM " + TABLE_NAME, function (err, row) {
+                    console.log(row.AsOf + ": " + row.Value);
+                });
+            });
+
+            db.close();
+        },
+        select: function () {
+            const dataFile = getDataFileName(nasdaqIndexCode);
+            var db = new sqlite3.Database(dataFile);
+
+            db.serialize(function () {
                 db.each("SELECT AsOf, Value FROM " + TABLE_NAME, function (err, row) {
                     console.log(row.AsOf + ": " + row.Value);
                 });

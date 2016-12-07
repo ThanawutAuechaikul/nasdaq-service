@@ -1,8 +1,9 @@
 'use strict';
 
-const dbClient = require('./server/dbClient');
-const nasdaqWebClient = require('./server/nasdaqWebClient');
+const collector = require('./server/nasdaqDataCollector');
+// Add here if it has more mode
+const COLLECTED_CODES = ['ixic'];
 
-var ixicClient = dbClient('ixic'); 
-ixicClient.init();
-nasdaqWebClient.run('ixic');
+for (var codeIndex = 0; codeIndex < COLLECTED_CODES.length; codeIndex++) {
+    collector(COLLECTED_CODES[codeIndex]).start();
+}
