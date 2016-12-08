@@ -1,6 +1,6 @@
 'use strict';
 
-const apiV1 = require('./server/nasdaqServiceV1.js');
+const nasdaqServiceV1 = require('./server/nasdaqServiceV1.js');
 const collector = require('./server/nasdaqDataCollector');
 const _ = require('lodash');
 
@@ -13,5 +13,5 @@ _.each(COLLECTED_CODES, function(code) {
     collector(code).start();
 });
 
-// Start REST servvice
-apiV1.start(SERVICE_PORT);
+// Start REST service
+nasdaqServiceV1.start(SERVICE_PORT);

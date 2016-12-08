@@ -25,8 +25,9 @@ function getTimeSeriesDataHandler(req, res) {
 function dbRowsToTimeSeries(rows) {
     var timeSeries = [];
     if (!_.isEmpty(rows)) {
+        const columnNames = dbClient.getColumnNames();
         timeSeries = _.map(rows, function (row) {
-            return { x: row.AsOf, y: row.Value };
+            return { x: row[columnNames.COLUMN_AS_OF], y: row[columnNames.COLUMN_VALUE] };
         });
     }
     return timeSeries;
