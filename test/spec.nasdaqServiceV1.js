@@ -2,6 +2,7 @@
 
 const path = require('path');
 const request = require('supertest');
+const sinon = require('sinon');
 const nasdaqServiceV1 = require(path.resolve('server/nasdaqServiceV1'));
 const dbClient = require(path.resolve('server/dbClient'));
 
@@ -15,36 +16,49 @@ describe('nasdaqServiceV1', function () {
             nasdaqServiceV1.start(TEST_PORT);
         });
 
-        beforeEach(function (done) {
-            dbClient.init(testIndexCode).then(function () {
-                done();
-            });
-        });
-
         it('should return empty array when no data', function (done) {
+            var mockRows = [];
+            var expectedServiceResponse = [];
+            var dbclientStub = sinon.stub(dbClient, "select", mockSelectFunction(mockRows));
+
             request('http://localhost:' + TEST_PORT)
                 .get('/api/v1/' + testIndexCode)
-                .expect([], done);
+                .expect(expectedServiceResponse, done);
         });
 
         it('should return correct time-series data when DB has data', function (done) {
-            dbClient.insert(testIndexCode, 1481130777777, "7777.0000");
-            dbClient.insert(testIndexCode, 1481130888888, "8888.0000");
-            var expectedReturnValue = [
+            var mockRows = [
+                { AsOf: 1481130777777, Value: "7777.0000" },
+                { AsOf: 1481130888888, Value: "8888.0000" }
+            ];
+            var expectedServiceResponse = [
                 { x: 1481130777777, y: "7777.0000" },
                 { x: 1481130888888, y: "8888.0000" }
             ];
+            var dbclientStub = sinon.stub(dbClient, "select", mockSelectFunction(mockRows));
 
             // Act + Assert
             request('http://localhost:' + TEST_PORT)
                 .get('/api/v1/' + testIndexCode)
-                .expect(expectedReturnValue, done);
+                .expect(expectedServiceResponse, done);
         });
 
-        afterEach(function (done) {
-            dbClient.dropTable(testIndexCode).then(function () {
-                done();
-            });
+        afterEach(function () {
+            dbClient.select.restore();
         });
+
+        function mockSelectFunction(mockRows) {
+            return function mockPromise(indexCode) {
+                if (indexCode === testIndexCode) {
+                    return new Promise(
+                        function (resolve, reject) {
+                            resolve(mockRows);
+                        }
+                    );
+                } else {
+                    console.error("select parameter should be " + testIndexCode);
+                }
+            }
+        }
     });
 });
