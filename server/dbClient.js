@@ -8,8 +8,28 @@ const TABLE_NAME = "indexValue";
 const COLUMN_AS_OF = "AsOf";
 const COLUMN_VALUE = "Value";
 
+// Connection cache
 // key is index code, value is knex connection
 var knexConnections = {};
+
+function createOrGetKnexConnection(nasdaqIndexCode) {
+    if (!knexConnections[nasdaqIndexCode]) {
+        knexConnections[nasdaqIndexCode] = require('knex')({
+            client: 'sqlite3',
+            connection: {
+                filename: getDataFilePath(nasdaqIndexCode)
+            },
+            useNullAsDefault: true
+        });
+    }
+    return knexConnections[nasdaqIndexCode];
+}
+
+function getDataFilePath(nasdaqIndexCode) {
+    // TODO: file should be moved to outside of project folder
+    // So data will not be deleted when new package is deployed
+    return path.join(path.resolve('data'), nasdaqIndexCode + '.db');
+}
 
 module.exports = {
     getColumnNames: function() {
@@ -20,7 +40,7 @@ module.exports = {
     },
 
     init: function(nasdaqIndexCode) {
-        const dataFile = getDataFileName(nasdaqIndexCode);
+        const dataFile = getDataFilePath(nasdaqIndexCode);
         var exists = fs.existsSync(dataFile);
 
         if (!exists) {
@@ -28,7 +48,7 @@ module.exports = {
             fs.openSync(dataFile, "w");
         }
 
-        return this.createOrGetKnexConnection(nasdaqIndexCode)
+        return createOrGetKnexConnection(nasdaqIndexCode)
             .schema
             .createTableIfNotExists(TABLE_NAME, function(table) {
                 table.integer(COLUMN_AS_OF);
@@ -44,7 +64,7 @@ module.exports = {
         insertObject[COLUMN_AS_OF] = asOf;
         insertObject[COLUMN_VALUE] = value;
 
-        return this.createOrGetKnexConnection(nasdaqIndexCode)
+        return createOrGetKnexConnection(nasdaqIndexCode)
             .insert(insertObject)
             .into(TABLE_NAME)
             .catch(function(error) {
@@ -53,7 +73,7 @@ module.exports = {
     },
 
     select: function(nasdaqIndexCode) {
-        return this.createOrGetKnexConnection(nasdaqIndexCode)
+        return createOrGetKnexConnection(nasdaqIndexCode)
             .distinct(COLUMN_AS_OF)
             .select(COLUMN_AS_OF, COLUMN_VALUE)
             .from(TABLE_NAME)
@@ -61,26 +81,14 @@ module.exports = {
     },
 
     dropTable: function(nasdaqIndexCode) {
-        return this.createOrGetKnexConnection(nasdaqIndexCode)
+        return createOrGetKnexConnection(nasdaqIndexCode)
             .schema
             .dropTableIfExists(TABLE_NAME);
     },
 
-    createOrGetKnexConnection: function(nasdaqIndexCode) {
-        if (!knexConnections[nasdaqIndexCode]) {
-            knexConnections[nasdaqIndexCode] = require('knex')({
-                client: 'sqlite3',
-                connection: {
-                    filename: getDataFileName(nasdaqIndexCode)
-                },
-                useNullAsDefault: true
-            });
-        }
-        return knexConnections[nasdaqIndexCode];
-    }
-};
+    release: function(nasdaqIndexCode) {
+        createOrGetKnexConnection(nasdaqIndexCode).destroy;
+    },
 
-function getDataFileName(nasdaqIndexCode) {
-    // TODO: file should be moved to outside of project folder
-    return path.join(__dirname, 'data', nasdaqIndexCode + '.db');
-}
+    getDataFilePath: getDataFilePath
+};

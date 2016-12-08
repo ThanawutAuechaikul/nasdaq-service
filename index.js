@@ -9,7 +9,7 @@ const _ = require('lodash');
 const COLLECTED_CODES = ['ixic', 'ixndx'];
 const SERVICE_PORT = process.env.NASDAQ_SERVICE_PORT || 8080;
 
-// Scrap NASDAQ data
+// Scrap and collect NASDAQ data
 _.each(COLLECTED_CODES, function(code) {
     collector(code).start();
 });

@@ -6,14 +6,6 @@ const dbClient = require(path.resolve('server/dbClient'));
 
 const _ = require('lodash');
 
-module.exports = {
-    start: function (port) {
-        var app = express();
-        app.get('/api/v1/:nasdaqIndexCode', getTimeSeriesDataHandler);
-        app.listen(port);
-    }
-};
-
 function getTimeSeriesDataHandler(req, res) {
     retrieveData(req.params.nasdaqIndexCode)
         .then(function (rows) {
@@ -38,3 +30,11 @@ function dbRowsToTimeSeries(rows) {
 function retrieveData(nasdaqIndexCode) {
     return dbClient.select(nasdaqIndexCode);
 }
+
+module.exports = {
+    start: function (port) {
+        var app = express();
+        app.get('/api/v1/:nasdaqIndexCode', getTimeSeriesDataHandler);
+        app.listen(port);
+    }
+};
