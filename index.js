@@ -1,11 +1,12 @@
 'use strict';
 
-const nasdaqServiceV1 = require('./server/nasdaqServiceV1.js');
-const collector = require('./server/nasdaqDataCollector');
+const path = require('path');
+const nasdaqServiceV1 = require(path.resolve('server/nasdaqServiceV1.js'));
+const collector = require(path.resolve('server/nasdaqDataCollector'));
 const _ = require('lodash');
 
 // Add element here if it has more index codes
-const COLLECTED_CODES = ['ixic'];
+const COLLECTED_CODES = ['ixic', 'ixndx'];
 const SERVICE_PORT = process.env.NASDAQ_SERVICE_PORT || 8080;
 
 // Scrap NASDAQ data

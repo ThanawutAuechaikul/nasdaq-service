@@ -18,6 +18,7 @@ module.exports = {
             COLUMN_VALUE: COLUMN_VALUE 
         };
     },
+    
     init: function (nasdaqIndexCode) {
         const dataFile = getDataFileName(nasdaqIndexCode);
         var exists = fs.existsSync(dataFile);

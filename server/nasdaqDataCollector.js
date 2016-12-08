@@ -1,15 +1,16 @@
 'use strict';
 
-const dbClient = require('./dbClient');
-const nasdaqWebClient = require('./nasdaqWebClient');
+const path = require('path');
+const dbClient = require(path.resolve('server/dbClient'));
+const nasdaqWebClient = require(path.resolve('server/nasdaqWebClient'));
 
-const INTERVAL_MS = 3 * 1000;
+const INTERVAL_MS = 10 * 1000;
 
 module.exports = function (nasdaqIndexCode) {
     return {
         start: function () {
             dbClient.init(nasdaqIndexCode);
-            nasdaqWebClient.start(nasdaqIndexCode, INTERVAL_MS, dbClient.insert.bind(dbClient));
+            nasdaqWebClient(nasdaqIndexCode).start(INTERVAL_MS, dbClient.insert.bind(dbClient));
         }
-    }
+    };
 }

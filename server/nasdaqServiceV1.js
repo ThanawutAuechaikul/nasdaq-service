@@ -1,13 +1,15 @@
 'use strict';
 
+const path = require('path');
 const express = require('express');
-const dbClient = require('./dbClient');
+const dbClient = require(path.resolve('server/dbClient'));
+
 const _ = require('lodash');
 
 module.exports = {
     start: function (port) {
         var app = express();
-        app.get('/nasdaq/api/v1/:nasdaqIndexCode', getTimeSeriesDataHandler);
+        app.get('/api/v1/:nasdaqIndexCode', getTimeSeriesDataHandler);
         app.listen(port);
     }
 };

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node ./index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "author": "Thanawut Auechaikul",
   "dependencies": {
@@ -14,5 +14,10 @@
     "lodash": "4.17.2",
     "request": "2.79.0",
     "sqlite3": "3.1.8"
+  },
+  "devDependencies": {
+    "mocha": "3.2.0",
+    "should": "11.1.1",
+    "supertest": "2.0.1"
   }
 }
