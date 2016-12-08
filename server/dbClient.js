@@ -8,18 +8,18 @@ const TABLE_NAME = "indexValue";
 const COLUMN_AS_OF = "AsOf";
 const COLUMN_VALUE = "Value";
 
-// key is index code, value is knex conn
+// key is index code, value is knex connection
 var knexConnections = {};
 
 module.exports = {
-    getColumnNames: function () {
+    getColumnNames: function() {
         return {
             COLUMN_AS_OF: COLUMN_AS_OF,
-            COLUMN_VALUE: COLUMN_VALUE 
+            COLUMN_VALUE: COLUMN_VALUE
         };
     },
-    
-    init: function (nasdaqIndexCode) {
+
+    init: function(nasdaqIndexCode) {
         const dataFile = getDataFileName(nasdaqIndexCode);
         var exists = fs.existsSync(dataFile);
 
@@ -28,8 +28,9 @@ module.exports = {
             fs.openSync(dataFile, "w");
         }
 
-        this.createOrGetKnexConnection(nasdaqIndexCode).schema
-                .createTableIfNotExists(TABLE_NAME, function (table) {
+        return this.createOrGetKnexConnection(nasdaqIndexCode)
+            .schema
+            .createTableIfNotExists(TABLE_NAME, function(table) {
                 table.integer(COLUMN_AS_OF);
                 table.string(COLUMN_VALUE);
             }).catch(function(e) {
@@ -37,7 +38,7 @@ module.exports = {
             });
     },
 
-    insert: function (nasdaqIndexCode, asOf, value) {
+    insert: function(nasdaqIndexCode, asOf, value) {
         // TODO: Avoid insert duplicate asOf
         var insertObject = {};
         insertObject[COLUMN_AS_OF] = asOf;
@@ -46,12 +47,12 @@ module.exports = {
         return this.createOrGetKnexConnection(nasdaqIndexCode)
             .insert(insertObject)
             .into(TABLE_NAME)
-            .catch(function (error) {
+            .catch(function(error) {
                 console.error(error);
             });
     },
 
-    select: function (nasdaqIndexCode) {
+    select: function(nasdaqIndexCode) {
         return this.createOrGetKnexConnection(nasdaqIndexCode)
             .distinct(COLUMN_AS_OF)
             .select(COLUMN_AS_OF, COLUMN_VALUE)
@@ -59,13 +60,20 @@ module.exports = {
             .orderBy(COLUMN_AS_OF, 'asc');
     },
 
-    createOrGetKnexConnection: function (nasdaqIndexCode) {
+    dropTable: function(nasdaqIndexCode) {
+        return this.createOrGetKnexConnection(nasdaqIndexCode)
+            .schema
+            .dropTableIfExists(TABLE_NAME);
+    },
+
+    createOrGetKnexConnection: function(nasdaqIndexCode) {
         if (!knexConnections[nasdaqIndexCode]) {
             knexConnections[nasdaqIndexCode] = require('knex')({
                 client: 'sqlite3',
                 connection: {
                     filename: getDataFileName(nasdaqIndexCode)
-                }
+                },
+                useNullAsDefault: true
             });
         }
         return knexConnections[nasdaqIndexCode];

@@ -9,8 +9,9 @@ const INTERVAL_MS = 10 * 1000;
 module.exports = function (nasdaqIndexCode) {
     return {
         start: function () {
-            dbClient.init(nasdaqIndexCode);
-            nasdaqWebClient(nasdaqIndexCode).start(INTERVAL_MS, dbClient.insert.bind(dbClient));
+            dbClient.init(nasdaqIndexCode).then(function() {
+                nasdaqWebClient(nasdaqIndexCode).start(INTERVAL_MS, dbClient.insert.bind(dbClient));
+            });     
         }
     };
 }
