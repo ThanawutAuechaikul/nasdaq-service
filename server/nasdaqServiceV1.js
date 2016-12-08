@@ -1,37 +1,37 @@
+'use strict';
+
 const express = require('express');
 const dbClient = require('./dbClient');
-
-//var knexConnections = {};
+const _ = require('lodash');
 
 module.exports = {
     start: function (port) {
         var app = express();
-
-        app.get('/nasdaq/api/v1/:nasdaqIndexCode', function (req, res) {
-            var nasdaqIndexCode = req.params.nasdaqIndexCode;
-
-            //if (!knexConnections[nasdaqIndexCode]) {
-          //      knexConnections[nasdaqIndexCode] = dbClient.createKnexInstance(nasdaqIndexCode);
-          //  }
-
-            dbClient
-                .select(nasdaqIndexCode)
-                .then(function (rows) {
-                    var result = [];
-                    if (rows) {
-                        for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                            var row = rows[rowIndex];
-                            result.push({ x: row.AsOf, y: row.Value });
-                        }
-                    }
-
-                    res.status(200).json(result);
-                })
-                .catch(function (error) {
-                    res.status(500).json(error);
-                });
-        });
-
+        app.get('/nasdaq/api/v1/:nasdaqIndexCode', getTimeSeriesDataHandler);
         app.listen(port);
     }
+};
+
+function getTimeSeriesDataHandler(req, res) {
+    retrieveData(req.params.nasdaqIndexCode)
+        .then(function (rows) {
+            res.status(200).json(dbRowsToTimeSeries(rows));
+        })
+        .catch(function (error) {
+            res.status(500).json(error);
+        });
+}
+
+function dbRowsToTimeSeries(rows) {
+    var timeSeries = [];
+    if (!_.isEmpty(rows)) {
+        timeSeries = _.map(rows, function (row) {
+            return { x: row.AsOf, y: row.Value };
+        });
+    }
+    return timeSeries;
+}
+
+function retrieveData(nasdaqIndexCode) {
+    return dbClient.select(nasdaqIndexCode);
 }

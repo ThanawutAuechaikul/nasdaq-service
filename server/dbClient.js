@@ -10,11 +10,6 @@ const CREATE_TABLE_SQL = "CREATE TABLE " + TABLE_NAME + " (AsOf INTEGER, Value T
 // key is index code, value is knex conn
 var knexConnections = {};
 
-function getDataFileName(nasdaqIndexCode) {
-    // TODO: file should be moved to outside of project folder
-    return path.join(__dirname, 'data', nasdaqIndexCode + '.db');
-}
-
 module.exports = {
 
     init: function (nasdaqIndexCode) {
@@ -34,6 +29,7 @@ module.exports = {
     },
 
     insert: function (nasdaqIndexCode, asOf, value) {
+        // TODO: Avoid insert duplicate asOf
         return this.createOrGetKnexConnection(nasdaqIndexCode)
             .insert({ AsOf: asOf, Value: value })
             .into(TABLE_NAME)
@@ -62,3 +58,8 @@ module.exports = {
         return knexConnections[nasdaqIndexCode];
     }
 };
+
+function getDataFileName(nasdaqIndexCode) {
+    // TODO: file should be moved to outside of project folder
+    return path.join(__dirname, 'data', nasdaqIndexCode + '.db');
+}

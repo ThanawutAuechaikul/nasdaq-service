@@ -1,10 +1,19 @@
 'use strict';
 
 const nasdaqRequest = require('request');
-const REQUEST_TIMEOUT_MS = 5 * 1000;
+const REQUEST_TIMEOUT_MS = 3 * 1000;
 
 var _nasdaqIndexCode = "";
 var _getIndexDataCallback = null;
+
+module.exports = {
+    start: function (nasdaqIndexCode, interval, getIndexDataCallback) {
+        _nasdaqIndexCode = nasdaqIndexCode;
+        _getIndexDataCallback = getIndexDataCallback;
+
+        setInterval(requestData, interval);
+    }
+};
 
 function requestData() {
     nasdaqRequest.post({
@@ -21,15 +30,6 @@ function requestCallback(error, response, body) {
             _getIndexDataCallback(_nasdaqIndexCode, body.AsOf, body.Value);
         }
     } else {
-        console.error("request nasdaq data error: " + error);
-    }
-}
-
-module.exports = {
-    start: function (nasdaqIndexCode, interval, getIndexDataCallback) {
-        _nasdaqIndexCode = nasdaqIndexCode;
-        _getIndexDataCallback = getIndexDataCallback;
-
-        setInterval(requestData, interval);
+        console.error("scrapping nasdaq data error: " + error);
     }
 }
