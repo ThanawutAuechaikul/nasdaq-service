@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node ./index.js",
-    "test": "mocha --timeout 5000",
-    "clean": "rm data/test_index_code*"
+    "test": "mocha --timeout 5000"
   },
   "author": "Thanawut Auechaikul",
   "dependencies": {
